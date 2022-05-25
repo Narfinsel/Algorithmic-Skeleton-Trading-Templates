@@ -49,9 +49,13 @@ These are fully functional, complete Expert Advisors. You just need to modify/en
 
 ## 4. Code Specs
 Following explanation is targeted to <em>Skeleton Algo v1.0 Uni-Periodical Conditional OP</em>.
+
 Entry-method. On every tick, <strong><em>void update_On_New_Bar()</em></strong> is called. 
+
 This function runs time/periodicity checks to ensure that its contents are executed once in M15, H1, D1 (etc) (based on chart).
+
 Main-algo executes peridocally (based on chart timeframe): <em> algorithm_UniBar_Fixed_TakeProfit()</em>
+
 For debugging purposes, we print a new blanked line (as delimiter) on every frech candle/period: <em>alertBLANKlineForNewBarOrTick()</em>
 ```MQL5
 //+------------------------------------------------------------------+
@@ -144,7 +148,9 @@ if(areWaitCandlesCondtionsSatisfied == true){
 
 
 Part of main-algo. Only open long/short positions if the custom functions previously returned true. And if enough candles have passed since the last losing trade (in case you enabled you this behaviour).
+
 Here, we also compute volume (based on % risk), stop-loss and take-proffit levels. Example: <em>Inputing a 2% risk will result in calculating a trading volume, so that taking stop-loss into consideration as potentional loss - you won't risk losing more than 2% of your account balance.</em>
+
 Optinally, for debugging purposes, you can enable the main-algo to draw vertical lines to easily visualize when the custom functions return true, and a new position is opened.
 ```MQL5
 // OPEN BUY
