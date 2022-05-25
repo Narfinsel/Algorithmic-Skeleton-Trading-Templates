@@ -58,10 +58,31 @@ These include files include some utility functions that are necesarry for the al
    <li>include general behavioral methods that allow the EA to pause if account balance drops too low, after to many loses.</li>
    <li>include general behavioral methods that pause trading for a certain amount of time after a lost trade.</li>
 </ul>
+
 ```MQL5
 #include <UtilitaryTradingFunctions.mqh>
 #include <TradeRectVisualizer.mqh>
 ```
+
+Input values: Stop-loss, take-proffit, risk percentage, and a miriad of activation flags to turn on some custom behaviors for: extra protection against risk, trade vizualisation, etc.
+```MQL5
+extern int stopLossPips = 25;                            // Stop-Loss in Pips
+extern double takeProffitMultiplier = 1.5;               // Take-Profit (multiplied from Stop-Loss)
+extern ENUM_TIMEFRAMES perdiod_SUP_IND = PERIOD_D1;      // Secondary Period for Indicator or Timed Actions
+extern bool doWaitXnumCandlesAfterLoss = true;           // Should wait X bars after lost trade
+extern int waitXnumCandlesAfterLoss = 10;                // How many X bars to wait
+extern bool doRemoveEAwhenMinBalanceReached = true;      // Should remove EA after High Capital Loss
+extern double minimumBalancePercentage = 80.0;           // Drawdown Capital Loss, when EA removed
+extern bool is5DigitBroker = true;                       // Is a 5-Digit Broker
+extern bool doGraphTradesArrRect = true;                 // Should outline Trade Position with Rectangles
+extern double percentageRisk = 1.0;                      // Percentage Risk
+```
+
+Note that not all of these are present in every single attached algorithm. 
+<ul>
+   <li>Take-profit <em>takeProffitMultiplier</em> is not present in OP-CL scripts, since closing trade is done programatically through custom logic. </li>
+   <li>Secondary timeframe <em>perdiod_SUP_IND</em> adds an extra periodicity function for more custom indictors, on higher / lower timeframes.</li>
+</ul>
 
 ### 4.1. Custom Open OP
 Following explanation is targeted to <em>Skeleton Algo v1.0 Uni-Periodical Conditional OP</em>.
