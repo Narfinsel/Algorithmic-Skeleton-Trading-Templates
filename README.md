@@ -12,11 +12,12 @@ These are fully functional, complete Expert Advisors. You just need to modify/en
 2. [Table of Contents](#2-table-of-contents)
 3. [Project Description](#3-project-description)
 4. [Code Specs](#4-code-specs)
-5. [How to Tweak and Configure the Scanner Script Functionality](#5-how-to-tweak-and-configure-the-scanner-script-functionality)
-6. [How to Use the Project](#6-how-to-use-the-project)
-7. [Credits](#7-credits)
-8. [License](#8-license)
-
+   4.1. [Custom Open OP](#4-custom-open-op)
+   4.2. [Custom Open-Close OP-CL](#4-custom-open-close-op-cl)
+   4.2. [Custom Dual-Period Secondary / Timeframe Periocal function](#4-custom-dual-period-secondary-timeframe-periocal-function)
+   4.4. [Progressive Pull |PP|](#4-progressive-pull-pp)
+5. [Credits](#7-credits)
+6. [License](#8-license)
 
 ## 3. Project Description
 <p>Let's see what are these skeleton trading bots capable of? Here is a short list of steps, capabilities and "hard-coded" actions that the bots can undertake: </p>
@@ -29,6 +30,7 @@ These are fully functional, complete Expert Advisors. You just need to modify/en
    <li>Actions performed by the main trading algorithm <strong><em>void algorithm_UniBar_Fixed_TakeProfit()</em></strong>:
       <ul>
          <li>Optionally (based on input parameters), the trading strategy allows you to configure your bot to wait a certain number of candles after a losing trade.</li>
+         <li>Stop all trading and remove EA, if your loses (since EA started) go below an acceptable margin of loss (ex: below 80% of starting account balance.</li>
          <li>Compute stop-loss and take-proffit, based on input stop-loss pips and take-proffit multiplier. </li>
          <li>Automatically deduce volume for each trade, based on stop-loss and input risk - to accomodate desired risk percentage for each position. </li>
          <li>Upon closing a position, either in loss or profit - there is an option to draw colored rectangles on the chart, to highlight those trade stop-loss and take-profit levels. And get a clearer picture about how well your bot is performing.</li>
@@ -140,19 +142,12 @@ void algorithm_UniBar_Fixed_TakeProfit(){
 }
 ```
 
-Part of main-algo. Checking if the most recent trade has been closed (wheter in profit or loss). In this case, we could draw rectangles to outline the trade levels
+Part fo main-algo. Remove EA and cease all trading when your loses are too much (based on initial input params):
 ```MQL5
-// Check if there is an open trade, or if it was closed as a result of hitting Stop Loss
-static bool hasDrawnArrRect = false;
-if(OrderSelect(currentOrderTicket, SELECT_BY_TICKET) == true)
-   if(OrderCloseTime() > 0){
-      isThereAnOpenTrade = false;
-      if(doGraphTradesArrRect == true && hasDrawnArrRect == false){
-         rectVisualizer.vizualizeHalfHollowTradeRect (magicNumber, currentOrderTicket);
-         hasDrawnArrRect = true;
-      }
-   }
-else isThereAnOpenTrade = true;
+extern bool doRemoveEAwhenMinBalanceReached = true;      // Should remove EA after High Capital Loss
+extern double minimumBalancePercentage = 80.0;           // Drawdown Capital Loss, when EA removed
+//...
+bool disableTradingExceedingLoses = disableTrading_AccountBalance_TooSmall(startingAccountBalance, minimumBalancePercentage, doRemoveEAwhenMinBalanceReached);
 ```
 
 Part of main-algo. Checking if enough candles/bars have passed since the last losing trade has closed, with an unfortunate outcome for our portofolio:
@@ -168,6 +163,21 @@ if( doWaitXnumCandlesAfterLoss == true && OrdersHistoryTotal() >=1 ){
    else areWaitCandlesCondtionsSatisfied = true;
 }
 else areWaitCandlesCondtionsSatisfied = true;
+```
+
+Part of main-algo. Checking if the most recent trade has been closed (wheter in profit or loss). In this case, we could draw rectangles to outline the trade levels
+```MQL5
+// Check if there is an open trade, or if it was closed as a result of hitting Stop Loss
+static bool hasDrawnArrRect = false;
+if(OrderSelect(currentOrderTicket, SELECT_BY_TICKET) == true)
+   if(OrderCloseTime() > 0){
+      isThereAnOpenTrade = false;
+      if(doGraphTradesArrRect == true && hasDrawnArrRect == false){
+         rectVisualizer.vizualizeHalfHollowTradeRect (magicNumber, currentOrderTicket);
+         hasDrawnArrRect = true;
+      }
+   }
+else isThereAnOpenTrade = true;
 ```
 
 Part of main-algo. Customizable functions are finally used inside the main-algo. You don't need to change the following lines, where these functions are used. But you do need to fill in these functions where they are defined (see above).
@@ -301,5 +311,65 @@ else if(isThereAnOpenTrade == true){
    }
 ```
 
+
+### 4.3. Custom Dual-Period / Secondary Timeframe Periocal function
+The following skeleton algos have two periocity-based functions. One for the chart timeframe, and one for a secondary timeframe of your choosing (for some custom indicator on lower/higher timeframe):
+<ul>
+   <li><em>Skeleton Algo v2.0 Dual-Periodical Conditional OP </em></li>
+   <li><em>Skeleton Algo v2.1 Dual-Periodical Conditional OP-CL </em></li>
+</ul>
+For examples, you might wand to use your M30 chart timeframe for a MACD indicator. And a secondary H4 period for a Bollinger Bands indicator. You can use these in combination for some more intricate trading strategy.
+
+Maybe your opening/closing functions will be updated based on a M15 timeframe. But your script shall be running on a H1, and the main-algo is to be called every hour (H1).
+
+```MQL5
+static datetime lastTimeSUP_IND = 0;
+void update_On_New_Bar_SUP_IND (int periodForIndicator){
+   // METHOD - Returns true if a new bar has appeared for a symbol/period pair  |
+   //--- memorize the time of opening of the last bar in the static variable
+   datetime lastBarTimeSUP_IND = (datetime) SeriesInfoInteger(Symbol(), periodForIndicator ,SERIES_LASTBAR_DATE);  //--- current time
+   if(lastTimeSUP_IND == 0){               //--- if it is the first call of the function
+      lastTimeSUP_IND = lastBarTimeSUP_IND;       //--- set the time and exit
+      // --------------- CHECK FOR OPEN-CLOSE CONDITIONS based on INDICATOR ---------------
+      conditionForBuying  = conditionsBuy();
+      conditionForSelling = conditionsSell();
+   }
+   if(lastTimeSUP_IND != lastBarTimeSUP_IND){     //--- if the time differs
+      lastTimeSUP_IND = lastBarTimeSUP_IND;       //--- memorize the time and return true
+      // --------------- CHECK FOR OPEN-CLOSE CONDITIONS based on INDICATOR ---------------
+      conditionForBuying  = conditionsBuy();
+      conditionForSelling = conditionsSell();
+   }
+}
+
+static datetime lastTime = 0;
+void update_On_New_Bar(){
+   // METHOD - Returns true if a new bar has appeared for a symbol/period pair  |
+   //--- memorize the time of opening of the last bar in the static variable
+   datetime lastBarTime = (datetime) SeriesInfoInteger(Symbol(),Period(),SERIES_LASTBAR_DATE);  //--- current time
+   if(lastTime == 0){               //--- if it is the first call of the function
+      lastTime = lastBarTime;       //--- set the time and exit    
+      algorithm_DualBar_Fixed_TakeProfit();
+   }
+   if(lastTime != lastBarTime){     //--- if the time differs
+      lastTime = lastBarTime;       //--- memorize the time and return true
+      algorithm_DualBar_Fixed_TakeProfit();
+   }
+}
+```
+
+### 4.4. Progressive Pull |PP|
+
 ```MQL5
 ```
+
+
+## 5. Credits
+I can't credit anyone directly, but this section seems appropriate because I owe special thanks to so many course & content creators, chanels, youtubers.
+1. MQL4 Programming. Visit this [link](https://www.youtube.com/channel/UCIuhfiM34b2P8qv_HX_uwug/featured).
+2. ForexBoat Team. Check out Kiril's course on [udemy](https://www.udemy.com/course/learn-mql4/).
+These guys create amazing content and I have learned so much from them!
+
+
+## 6. License
+Feel free to use this project for yourself. Or to edit it, use bits of it. Do not commercialize it! My *Algorithmic Skeleton Templates* project is licensed under the GNU AGPLv3 license. Check out the licence link to better understand what you can and cannot do with this code.
