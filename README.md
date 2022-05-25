@@ -12,23 +12,13 @@ These are fully functional, complete Expert Advisors. You just need to modify/en
 2. [Table of Contents](#2-table-of-contents)
 3. [Project Description](#3-project-description)
 4. [Code Specs](#4-code-specs)
-   - [Custom Open OP](#4-1-custom-open-op)
-   - [Custom Open-Close OP-CL](#4-2-custom-open-close-op-cl)
-   - [Custom Dual-Period Secondary / Timeframe Periocal function](#4-3-custom-dual-period-secondary-timeframe-periocal-function)
-   - [Progressive Pull |PP|](#4-4-progressive-pull-pp)
+   4.1. [Custom Open OP](#41-custom-open-op)
+   4.2. [Custom Open-Close OP-CL](#42-custom-open-close-op-cl)
+   4.3. [Custom Dual-Period Secondary / Timeframe Periocal function](#43-custom-dual-period--secondary-timeframe-periocal-function)
+   4.4. [Progressive Pull |PP|](#44-progressive-pull-pp)
 5. [Credits](#7-credits)
 6. [License](#8-license)
 
-   * [gh-md-toc](#gh-md-toc)
-   * [Installation](#installation)
-   * [Usage](#usage)
-      * [STDIN](#stdin)
-      * [Local files](#local-files)
-      * [Remote files](#remote-files)
-      * [Multiple files](#multiple-files)
-      * [Combo](#combo)
-   * [Tests](#tests)
-   * [Dependency](#dependency)
 
 ## 3. Project Description
 <p>Let's see what are these skeleton trading bots capable of? Here is a short list of steps, capabilities and "hard-coded" actions that the bots can undertake: </p>
