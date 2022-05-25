@@ -48,6 +48,38 @@ These are fully functional, complete Expert Advisors. You just need to modify/en
 
 
 ## 4. Code Specs
+Following explanation is targeted to <em>Skeleton Algo v1.0 Uni-Periodical Conditional OP</em>.
+Entry-method. On every tick, <strong><em>void update_On_New_Bar()</em></strong> is called. 
+This function runs time/periodicity checks to ensure that its contents are executed once in M15, H1, D1 (etc) (based on chart).
+Main-algo executes peridocally (based on chart timeframe): <em> algorithm_UniBar_Fixed_TakeProfit()</em>
+For debugging purposes, we print a new blanked line (as delimiter) on every frech candle/period: <em>alertBLANKlineForNewBarOrTick()</em>
+```MQL5
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick(){
+   update_On_New_Bar();
+}
+
+static datetime lastTime = 0;
+void update_On_New_Bar(){
+   // METHOD - Returns true if a new bar has appeared for a symbol/period pair  |
+   //--- memorize the time of opening of the last bar in the static variable
+   datetime lastBarTime = (datetime) SeriesInfoInteger(Symbol(),Period(),SERIES_LASTBAR_DATE);  //--- current time
+   if(lastTime == 0){               //--- if it is the first call of the function
+      lastTime = lastBarTime;       //--- set the time and exit
+      // --------------- INITIATE INDICATOR -----------------------------------------------
+      algorithm_UniBar_Fixed_TakeProfit();
+      alertBLANKlineForNewBarOrTick();
+   }
+   if(lastTime != lastBarTime){     //--- if the time differs
+      lastTime = lastBarTime;       //--- memorize the time and return true
+      // --------------- REFRESH INDICATOR ------------------------------------------------
+      algorithm_UniBar_Fixed_TakeProfit();
+      alertBLANKlineForNewBarOrTick();
+   }
+}
+```
 
 Custom-functions. These are the functions that you need to modify by insert your own custom logic / trading strategy code. There are even global, static variables that hold the output for these functions, which are later deployd in the main algo:
 ```MQL5
