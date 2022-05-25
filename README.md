@@ -22,17 +22,27 @@ These are fully functional, complete Expert Advisors. You just need to modify/en
 ## 3. Project Description
 <p>Let's see what are these skeleton trading bots capable of? Here is a short list of steps, capabilities and "hard-coded" actions that the bots can undertake: </p>
 <ul>
-  <li>Peridically activated function <em>void update_On_New_Bar()</em> - which runs everytime a new candle/bar is created, based on chart timeframe. </li>
-  <li>Periodical function is usefull for lagging indicators (Moving Average, EMA, MACD, Ichimoku Cloud, RSI). As you know these indicator are updated based on chart timeframe.</li>
-  <li>Use this function to update your indicators, sample new values, use last closed-bar to register new values.</li>
-  <li>The only functions you need to worry about are: <strong><em>validateOpenBuy(), validateOpenSell()</em></strong>. This is where you insert and fill in your trading strategy.</li>
-  <li>These functions are used inside the main trading function: <strong><em>void algorithm_UniBar_Fixed_TakeProfit()</em></strong>. So you don't need and should not modify this trading method.</li>
-  <li> Actions performed by the main trading algorithm <strong><em>void algorithm_UniBar_Fixed_TakeProfit()</em></strong>:
+   <li>Peridically activated function <em>void update_On_New_Bar()</em> - which runs everytime a new candle/bar is created, based on chart timeframe. </li>
+   <li>Periodical function is usefull for lagging indicators (Moving Average, EMA, MACD, Ichimoku Cloud, RSI). As you know these indicator are updated based on chart timeframe.</li>
+   <li>Use this function to update your indicators, sample new values, use last closed-bar to register new values.</li>
+   <li>The only functions you need to worry about are: <strong><em>validateOpenBuy(), validateOpenSell()</em></strong>. This is where you insert and fill in your trading strategy.</li>
+   <li>These functions are used inside the main trading function: <strong><em>void algorithm_UniBar_Fixed_TakeProfit()</em></strong>. So you don't need and should not modify this trading method.</li>
+   <li>Actions performed by the main trading algorithm <strong><em>void algorithm_UniBar_Fixed_TakeProfit()</em></strong>:
       <ul>
-          <li> Enthu. </li>
-          <li> Enthu. </li>
-          <li> Enthu. </li>
+         <li>Optionally (based on input parameters), the trading strategy allows you to configure your bot to wait a certain number of candles after a losing trade.</li>
+         <li>Compute stop-loss and take-proffit, based on input stop-loss pips and take-proffit multiplier. </li>
+         <li>Automatically deduce volume for each trade, based on stop-loss and input risk - to accomodate desired risk percentage for each position. </li>
+         <li>Upon closing a position, either in loss or profit - there is an option to draw colored rectangles to highlight those trade stop-loss and take-profit levels. And get a clearer picture about how well your bot is performing.</li>
       </ul>
-  </li>
+   </li>
+   <li>There are five skeleton-algorithmic bots, which have different ways of opening / advancing / closing trades. To note, opening trades always requires you to input custom conditional code which resolves to true/false. This is where you can use custom indicators and your own strategy.</li>
+      <ul>
+         <li><em>Skeleton Algo v1.0 Uni-Periodical Conditional OP </em></li>
+         <li><em>Skeleton Algo v1.1 Uni-Periodical Conditional OP-CL </em></li>         
+         <li><em>Skeleton Algo v2.0 Dual-Periodical Conditional OP </em></li>
+         <li><em>Skeleton Algo v2.0 Dual-Periodical Conditional OP-CL </em></li>
+         <li><em>Skeleton Algo v3.0 PP </em></li>
+         <li><em>TradeRectVisualizer.mqh</em> and <em>UtilitaryTradingFunctions.mqh</em> (simple utilitay classes, aiding my trading bots.</li>
+      </ul>
 </ul>
 
