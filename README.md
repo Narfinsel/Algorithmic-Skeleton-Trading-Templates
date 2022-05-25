@@ -19,6 +19,17 @@ These are fully functional, complete Expert Advisors. You just need to modify/en
 5. [Credits](#7-credits)
 6. [License](#8-license)
 
+   * [gh-md-toc](#gh-md-toc)
+   * [Installation](#installation)
+   * [Usage](#usage)
+      * [STDIN](#stdin)
+      * [Local files](#local-files)
+      * [Remote files](#remote-files)
+      * [Multiple files](#multiple-files)
+      * [Combo](#combo)
+   * [Tests](#tests)
+   * [Dependency](#dependency)
+
 ## 3. Project Description
 <p>Let's see what are these skeleton trading bots capable of? Here is a short list of steps, capabilities and "hard-coded" actions that the bots can undertake: </p>
 <ul>
