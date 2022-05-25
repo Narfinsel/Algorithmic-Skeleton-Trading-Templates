@@ -25,13 +25,13 @@ These are fully functional, complete Expert Advisors. You just need to modify/en
    <li>Periodical function is usefull for lagging indicators (Moving Average, EMA, MACD, Ichimoku Cloud, RSI). As you know these indicator are updated based on chart timeframe.</li>
    <li>Use this function to update your indicators, sample new values, use last closed-bar to register new values.</li>
    <li>The only functions you need to worry about are: <strong><em>validateOpenBuy(), validateOpenSell()</em></strong>. This is where you insert and fill in your trading strategy.</li>
-   <li>These functions are used inside the main trading function: <strong><em>void algorithm_UniBar_Fixed_TakeProfit()</em></strong>. So you don't need and should not modify this trading method.</li>
+   <li>These functions are used inside the main trading function: <strong><em>void algorithm_UniBar_Fixed_TakeProfit()</em></strong>. So you should not modify this trading main-algo method.</li>
    <li>Actions performed by the main trading algorithm <strong><em>void algorithm_UniBar_Fixed_TakeProfit()</em></strong>:
       <ul>
          <li>Optionally (based on input parameters), the trading strategy allows you to configure your bot to wait a certain number of candles after a losing trade.</li>
          <li>Compute stop-loss and take-proffit, based on input stop-loss pips and take-proffit multiplier. </li>
          <li>Automatically deduce volume for each trade, based on stop-loss and input risk - to accomodate desired risk percentage for each position. </li>
-         <li>Upon closing a position, either in loss or profit - there is an option to draw colored rectangles to highlight those trade stop-loss and take-profit levels. And get a clearer picture about how well your bot is performing.</li>
+         <li>Upon closing a position, either in loss or profit - there is an option to draw colored rectangles on the chart, to highlight those trade stop-loss and take-profit levels. And get a clearer picture about how well your bot is performing.</li>
       </ul>
    </li>
    <li>There are five skeleton-algorithmic bots, which have different ways of opening / advancing / closing trades. To note, opening trades always requires you to input custom conditional code which resolves to true/false. This is where you can use custom indicators and your own strategy.</li>
@@ -48,7 +48,8 @@ These are fully functional, complete Expert Advisors. You just need to modify/en
 
 
 ## 4. Code Specs
-These are the functions that you need to modify by insert your own custom logic / trading strategy code. There are even global, static variables that hold the output for these functions, which are later deployd in the main algo:
+
+Custom-functions. These are the functions that you need to modify by insert your own custom logic / trading strategy code. There are even global, static variables that hold the output for these functions, which are later deployd in the main algo:
 ```MQL5
 static bool conditionForBuying, conditionForSelling;
 bool validateOpenBuy(){
@@ -68,7 +69,7 @@ void algorithm_UniBar_Fixed_TakeProfit(){
 }
 ```
 
-Checking if the most recent trade has been closed (wheter in profit or loss). In this case, we could draw rectangles to outline the trade levels
+Part of main-algo. Checking if the most recent trade has been closed (wheter in profit or loss). In this case, we could draw rectangles to outline the trade levels
 ```MQL5
 // Check if there is an open trade, or if it was closed as a result of hitting Stop Loss
 static bool hasDrawnArrRect = false;
@@ -83,7 +84,7 @@ if(OrderSelect(currentOrderTicket, SELECT_BY_TICKET) == true)
 else isThereAnOpenTrade = true;
 ```
 
-Checking if enough candles/bars have passed since the last losing trade has closed, with an unfortunate outcome for our portofolio:
+Part of main-algo. Checking if enough candles/bars have passed since the last losing trade has closed, with an unfortunate outcome for our portofolio:
 ```MQL5
 bool areWaitCandlesCondtionsSatisfied;
 if( doWaitXnumCandlesAfterLoss == true && OrdersHistoryTotal() >=1 ){
@@ -98,14 +99,66 @@ if( doWaitXnumCandlesAfterLoss == true && OrdersHistoryTotal() >=1 ){
 else areWaitCandlesCondtionsSatisfied = true;
 ```
 
+Part of main-algo. Customizable functions are finally used inside the main-algo. You don't need to change the following lines, where these functions are used. But you do need to fill in these functions where they are defined (see above).
+```MQL5
+if(areWaitCandlesCondtionsSatisfied == true){
+   conditionForBuying  = validateOpenBuy();
+   conditionForSelling = validateOpenSell();
+} else {
+   conditionForBuying  = false;
+   conditionForSelling = false;
+}
+```
 
 
+Part of main-algo. Only open long/short positions if the custom functions previously returned true. And if enough candles have passed since the last losing trade (in case you enabled you this behaviour).
+Here, we also compute volume (based on % risk), stop-loss and take-proffit levels. Example: <em>Inputing a 2% risk will result in calculating a trading volume, so that taking stop-loss into consideration as potentional loss - you won't risk losing more than 2% of your account balance.</em>
+Optinally, for debugging purposes, you can enable the main-algo to draw vertical lines to easily visualize when the custom functions return true, and a new position is opened.
+```MQL5
+// OPEN BUY
+if( conditionForBuying == true   &&   areWaitCandlesCondtionsSatisfied == true){
+   double volume = computeTradeVolume(percentageRisk, stopLossPips);
+   double orderStopLoss   = Ask - calcStopLossLevelInPoints;
+   double orderTakeProfit = Ask + (calcStopLossLevelInPoints * takeProffitMultiplier);
+   currentOrderTicket = OrderSend(Symbol(), OP_BUY, volume, Bid, 10, orderStopLoss, orderTakeProfit, "by UniBar", magicNumber, clrTurquoise);
+   if(OrderSelect(currentOrderTicket, SELECT_BY_TICKET) == true){
+      isThereAnOpenTrade = true;
+         hasDrawnArrRect = false;
+            if(doDrawOnOpen)
+               draw3ForTime(TimeCurrent(), clrSeaGreen, 1);
+   }
+}
+// OPEN SELL
+else if( conditionForSelling == true   &&   areWaitCandlesCondtionsSatisfied == true){
+   double volume = computeTradeVolume(percentageRisk, stopLossPips);
+   double orderStopLoss   = Bid + calcStopLossLevelInPoints;
+   double orderTakeProfit = Bid - (calcStopLossLevelInPoints * takeProffitMultiplier);
+   currentOrderTicket = OrderSend(Symbol(), OP_SELL, volume, Bid, 10, orderStopLoss, orderTakeProfit, "by UniBar", magicNumber, clrCrimson);
+   if(OrderSelect(currentOrderTicket, SELECT_BY_TICKET) == true){
+      isThereAnOpenTrade = true;
+         hasDrawnArrRect = false;
+            if(doDrawOnOpen)
+               draw3ForTime(TimeCurrent(), clrOrangeRed, 1);
+   }
+}
+```
 
-
-
-
-
-
+Part of main-algo. Compute a randomly generated magic number for this EA to use.
+Get account balance to use for initial draw-down calculations.
+Initialize the class/object which will outline and draw custom rectangles, highlightinh your trade on the chart.
+```MQL5
+int OnInit(){
+   magicNumber = magicNumberGenerator();
+   calcStopLossLevelInPoints = convertIntLevelToPricePoints( stopLossPips, true);
+   startingAccountBalance = AccountBalance();
+   
+   rectVisualizer = new TradeRectVisualizer();
+   rectVisualizer.setWhatToDraw (true, true);
+   rectVisualizer.setTradeArrowProperties (clrRed, clrRoyalBlue, 3);
+   rectVisualizer.setTradeRectProperties (clrTomato, clrDeepSkyBlue, true, true, 2);
+   return(INIT_SUCCEEDED);
+}
+```
 
 
 
