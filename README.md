@@ -39,7 +39,7 @@ These are fully functional, complete Expert Advisors. You just need to modify/en
          <li><em>Skeleton Algo v1.0 Uni-Periodical Conditional OP </em></li>
          <li><em>Skeleton Algo v1.1 Uni-Periodical Conditional OP-CL </em></li>         
          <li><em>Skeleton Algo v2.0 Dual-Periodical Conditional OP </em></li>
-         <li><em>Skeleton Algo v2.0 Dual-Periodical Conditional OP-CL </em></li>
+         <li><em>Skeleton Algo v2.1 Dual-Periodical Conditional OP-CL </em></li>
          <li><em>Skeleton Algo v3.0 PP </em></li>
          <li><em>TradeRectVisualizer.mqh</em> and <em>UtilitaryTradingFunctions.mqh</em> (simple utilitay classes, aiding my trading bots.</li>
       </ul>
@@ -47,12 +47,26 @@ These are fully functional, complete Expert Advisors. You just need to modify/en
 
 
 
-## 4. Code Specs
+## 4. Code Specs 
+These include files include some utility functions that are necesarry for the algorithms in order to:
+<ul>
+   <li>compute volume.</li>
+   <li>generate random magic number.</li>
+   <li>convert SL and TP levels from pips to points.</li>
+   <li>draw a trading rectangle object, to outline the position more clearly on the chart.</li>
+   <li>draw vertical lines and type blanked prints to ease debugging.</li>
+   <li>include general behavioral methods that allow the EA to pause if account balance drops too low, after to many loses.</li>
+   <li>include general behavioral methods that pause trading for a certain amount of time after a lost trade.</li>
+</ul>
+```MQL5
+#include <UtilitaryTradingFunctions.mqh>
+#include <TradeRectVisualizer.mqh>
+```
+
+### 4.1. Custom Open OP
 Following explanation is targeted to <em>Skeleton Algo v1.0 Uni-Periodical Conditional OP</em>.
 
-Entry-method. On every tick, <strong><em>void update_On_New_Bar()</em></strong> is called. 
-
-This function runs time/periodicity checks to ensure that its contents are executed once in M15, H1, D1 (etc) (based on chart).
+Entry-method. On every tick, <strong><em>void update_On_New_Bar()</em></strong> is called. This function runs time/periodicity checks to ensure that its contents are executed once in M15, H1, D1 (etc) (based on chart).
 
 Main-algo executes peridocally (based on chart timeframe): <em> algorithm_UniBar_Fixed_TakeProfit()</em>
 
@@ -199,7 +213,72 @@ int OnInit(){
 ```
 
 
+### 4.2. Custom Open-Close OP-CL
+The previous section revolved around a trading strategy in which trades are conditionally opened (based on custom strategy) but take-proffit levels represent the closing criteria.
 
+But the following is a more complex algorithm, in which both opening conditions and closing conditions are set programatically - you fill in these open/close trade functions with your custom code logic to decide when to open and close each position:
+<ul>
+   <li><em>Skeleton Algo v1.1 Uni-Periodical Conditional OP-CL </em></li>
+   <li><em>Skeleton Algo v2.1 Dual-Periodical Conditional OP-CL </em></li>
+</ul>
+So, now we are not longer setting take-profit levels. Instead, the trade will close either when stop-loss is hit, or when your closing functions will return true:
+<strong><em>bool confirm_Close_Long(), confirm_Close_Short()</em></strong>.
 
+Obviously, the algorithm opens trades in the same way as before, when the opener logic returns true: <strong><em>bool accept_Open_LONG(), accept_Open_SHORT()</em></strong>.
+```MQL5
+static bool openLongConditions, openShortConditions;
+static bool closeLongConditions, closeShortConditions;
 
+// ----------------------- LONG -----------------------
+bool accept_Open_LONG(){
+   return true;
+}
+bool confirm_Close_Long(){
+   return true;
+}
 
+// ----------------------- SHORT -----------------------
+bool accept_Open_SHORT(){
+   return true;
+}
+bool confirm_Close_Short(){
+   return true;
+}
+```
+
+Part of main-algo. Close-condition functions are used inside the main algorithm. I will no longer show open-condition functions are called, since this part is as same as in the previous algo (just check the previous section).
+```MQL5
+if(isThereAnOpenTrade == false){
+   // same as before (see above)
+}
+else if(isThereAnOpenTrade == true){
+      bool didFindCurrentOrder = OrderSelect(currentOrderTicket, SELECT_BY_TICKET);
+      bool wasOrderClosed;
+      
+      // Close BUY order
+      if(OrderType() == OP_BUY){
+         closeLongConditions = confirm_Close_Long();
+         if(closeLongConditions == true){
+            wasOrderClosed = OrderClose(currentOrderTicket, OrderLots(), Bid, 10, clrTurquoise);
+            if(wasOrderClosed == true){
+               isThereAnOpenTrade = false;
+               //draw3(TimeCurrent(), clrGreen);
+            }
+         }
+      }
+      // Close SELL order
+      else if(OrderType() == OP_SELL){
+         closeShortConditions = confirm_Close_Short();
+         if(closeShortConditions == true){
+            wasOrderClosed = OrderClose(currentOrderTicket, OrderLots(), Bid, 10, clrCrimson);
+            if(wasOrderClosed == true){
+               isThereAnOpenTrade = false;
+               //draw3(TimeCurrent(), clrFireBrick);
+            }
+         }
+      }
+   }
+```
+
+```MQL5
+```
