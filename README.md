@@ -360,8 +360,53 @@ void update_On_New_Bar(){
 ```
 
 ### 4.4. Progressive Pull |PP|
+This trading strategy is completly different, and focused on a trailing stop-loss and virtual take-profit (serving to help trail/advance trade levels).
+
+Aside from the advancing/traling function <em>algorithm_Advance_onTick()</em>, everything else works the same, as described previously.
 
 ```MQL5
+void OnTick(){
+   update_On_New_Bar();
+   algorithm_Advance_onTick();
+}
+void algorithm_Advance_onTick() { /* .... */ }
+bool validateBuyOpen()  { /* .... */ }
+bool validateSellOpen() { /* .... */ }
+
+static double orderNewVirtualTP = 0.0;
+
+void algorithm_Advance_onTick(){
+   double orderNewSL;
+   // Check if there is an open trade, or if it was closed as a result of hitting Stop Loss
+   if(OrderSelect(currentOrderTicket, SELECT_BY_TICKET) == true)
+      if(OrderCloseTime() > 0)   isThereAnOpenTrade = false;
+      else                       isThereAnOpenTrade = true;
+      
+   if(isThereAnOpenTrade == true){
+      bool wasCurrentSelected, wasCurrentModified;
+      
+      if(OrderType() == OP_BUY){
+         if(Bid >= orderNewVirtualTP){
+            wasCurrentSelected = OrderSelect(currentOrderTicket, SELECT_BY_TICKET);
+            if(wasCurrentSelected){
+               orderNewSL         = OrderStopLoss() + calcStopLossLevelInPoints;
+               orderNewVirtualTP  = OrderStopLoss() + (3* calcStopLossLevelInPoints);
+               wasCurrentModified = OrderModify(currentOrderTicket, 0, orderNewSL, 0, 0);
+            }
+         }
+      }
+      else if(OrderType() == OP_SELL){
+         if(Ask <= orderNewVirtualTP){
+            wasCurrentSelected = OrderSelect(currentOrderTicket, SELECT_BY_TICKET);
+            if(wasCurrentSelected){
+               orderNewSL         = OrderStopLoss() - calcStopLossLevelInPoints;
+               orderNewVirtualTP  = OrderStopLoss() - (3* calcStopLossLevelInPoints);
+               wasCurrentModified = OrderModify(currentOrderTicket, 0, orderNewSL, 0, 0);
+            }
+         }
+      }
+   }
+}
 ```
 
 
