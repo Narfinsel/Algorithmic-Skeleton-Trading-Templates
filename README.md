@@ -11,8 +11,7 @@ These are fully functional, complete Expert Advisors. You just need to modify/en
 1. [Introduction](#1-introduction)
 2. [Table of Contents](#2-table-of-contents)
 3. [Project Description](#3-project-description)
-   - [Definition & Terminology](#definition--terminology)
-4. [How to Install and Run the Project](#4-how-to-install-and-run-the-project)
+4. [Code Specs](#4-code-specs)
 5. [How to Tweak and Configure the Scanner Script Functionality](#5-how-to-tweak-and-configure-the-scanner-script-functionality)
 6. [How to Use the Project](#6-how-to-use-the-project)
 7. [Credits](#7-credits)
@@ -45,4 +44,71 @@ These are fully functional, complete Expert Advisors. You just need to modify/en
          <li><em>TradeRectVisualizer.mqh</em> and <em>UtilitaryTradingFunctions.mqh</em> (simple utilitay classes, aiding my trading bots.</li>
       </ul>
 </ul>
+
+
+
+## 4. Code Specs
+These are the functions that you need to modify by insert your own custom logic / trading strategy code. There are even global, static variables that hold the output for these functions, which are later deployd in the main algo:
+```MQL5
+static bool conditionForBuying, conditionForSelling;
+bool validateOpenBuy(){
+   // custom logic
+   return true;
+}
+bool validateOpenSell(){
+   // custom logic
+   return true;
+}
+```
+
+Main trading algorithm. There are a lot of actions performed by this function, into which I will delve further.
+```MQL5
+void algorithm_UniBar_Fixed_TakeProfit(){
+   // ....
+}
+```
+
+Checking if the most recent trade has been closed (wheter in profit or loss). In this case, we could draw rectangles to outline the trade levels
+```MQL5
+// Check if there is an open trade, or if it was closed as a result of hitting Stop Loss
+static bool hasDrawnArrRect = false;
+if(OrderSelect(currentOrderTicket, SELECT_BY_TICKET) == true)
+   if(OrderCloseTime() > 0){
+      isThereAnOpenTrade = false;
+      if(doGraphTradesArrRect == true && hasDrawnArrRect == false){
+         rectVisualizer.vizualizeHalfHollowTradeRect (magicNumber, currentOrderTicket);
+         hasDrawnArrRect = true;
+      }
+   }
+else isThereAnOpenTrade = true;
+```
+
+Checking if enough candles/bars have passed since the last losing trade has closed, with an unfortunate outcome for our portofolio:
+```MQL5
+bool areWaitCandlesCondtionsSatisfied;
+if( doWaitXnumCandlesAfterLoss == true && OrdersHistoryTotal() >=1 ){
+   if( checkIfLastOrderClosedWithLoss(currentOrderTicket) == true){
+      if( didWaitForXbars( Period(), OrderCloseTime(), waitXnumCandlesAfterLoss) == true){
+         areWaitCandlesCondtionsSatisfied = true;
+      }
+      else areWaitCandlesCondtionsSatisfied = false;
+   }
+   else areWaitCandlesCondtionsSatisfied = true;
+}
+else areWaitCandlesCondtionsSatisfied = true;
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
